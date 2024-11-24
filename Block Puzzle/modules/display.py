@@ -1,4 +1,5 @@
 import pygame as pg
+from pypuzzle import load_highscore
 
 piecescolors = (
     (0, 0, 0),  # PREVENT A BUG
@@ -194,6 +195,11 @@ def displayGameOverSolo(win, Player):
     win.fill(REDPINK)
     score = bigMediumFont.render(str(Player.points), True, GRAY)
     win.blit(score, (180, 288))
+    
+    # Adiciona o highscore ao display
+    highscore = bigMediumFont.render(f"High Score: {load_highscore()}", True, GRAY)
+    win.blit(highscore, (50, 650))  # Exibe logo abaixo da pontuação
+
     win.blit(gameoverShadow, (45, 170))
     win.blit(gameover, (40, 165))
 
