@@ -7,6 +7,8 @@ import modules.player as player
 import modules.functions as fnc
 import modules.pieces as pcs
 import modules.network as ntw
+import json
+import os
 
 SCREENHEIGHT = 700
 SCREENWIDTH = 450
@@ -40,6 +42,22 @@ soundPlaceable = pg.mixer.Sound("assets/placeable.wav")
 screen = pg.display.set_mode(screensize)
 pg.display.set_caption("PyPuzzle")
 
+# Função para carregar o high score do arquivo JSON
+def load_highscore():
+    if os.path.exists("highscore.json"):
+        with open("highscore.json", "r") as f:
+            data = json.load(f)
+            return data.get("highscore", 0)  # Retorna o highscore ou 0 se não existir
+    else:
+        # Se o arquivo não existir, cria com o highscore 0
+        with open("highscore.json", "w") as f:
+            json.dump({"highscore": 0}, f)
+        return 0
+
+# Função para salvar o high score no arquivo JSON
+def save_highscore(new_highscore):
+    with open("highscore.json", "w") as f:
+        json.dump({"highscore": new_highscore}, f)
 
 def updates(players, pieces, grid):
     """
@@ -180,13 +198,20 @@ def multiMenu():
         pg.display.flip()
 
 
-def gameOverSolo(player1):
+def gameOverSolo(player1, highscore):
     """
     gameOverSolo() is the game over menu for solo mode.
     @param player1: player object
+    @param highscore: highscore value
     """
     soundGameOver.play(-1, 0, 0)
     dsp.displayGameOverSolo(screen, player1)
+    
+    # Verifica se o score atual é maior que o highscore
+    if player1.points > highscore:
+        highscore = player1.points  # Atualiza o highscore
+        save_highscore(highscore)  # Salva o novo highscore no arquivo
+
     doContinue = True
     while doContinue:
         for event in pg.event.get():
@@ -214,7 +239,9 @@ def gameOverSolo(player1):
         else:
             pg.draw.rect(screen, dsp.YELLOW, (150, 448, 150, 45))
             screen.blit(dsp.quitText1, (200, 448))
+
         pg.display.flip()
+
 
 
 def gameOverMulti(players):
@@ -265,11 +292,12 @@ def solo():
     player1 = player.Player()
     players = [player1]
 
+    highscore = load_highscore()  # Carrega o highscore ao iniciar
     currentDisplay = 'solo'
     currentlyDragging = False
     doContinue = True
-    while doContinue:
 
+    while doContinue:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 fnc.quitGame()
@@ -305,7 +333,7 @@ def solo():
             dsp.displayDrawPieces(player1)
             dsp.displayTexts(screen, player1)
             if not grid.isDrawPlaceable(player1):
-                gameOverSolo(player1)
+                gameOverSolo(player1, highscore)  # Passa o highscore para o game over
 
         # HOVER
         pos = pg.mouse.get_pos()
@@ -316,7 +344,6 @@ def solo():
             pg.draw.rect(screen, dsp.GRAY, (340, 615, 85, 30))
             screen.blit(dsp.returnMenuText1, (354, 617))
         pg.display.flip()
-
 
 def multiLocal():
     """
